@@ -77,7 +77,33 @@ function orderExists(req, res, next) {
   res.status(404).json({ error: "not found!" });
 }
 
+function updateValidation(req, res, next) {
+  const { data: { id, status } = {} } = req.body;
+  const { orderId } = req.params;
+
+  if (id && id !== orderId) {
+    next({
+      status: 400,
+      message: `Order id does not match route id. Order: ${id}, Route: ${orderId}.`,
+    });
+  }
+  next();
+}
+
 function read(req, res) {
+  res.json({ data: res.locals.order });
+}
+
+function update(req, res) {
+  const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+
+  res.locals.order.id = req.params.orderId;
+  res.locals.order.deliverTo = deliverTo;
+  res.locals.order.mobileNumber = mobileNumber;
+  res.locals.order.status = status;
+  res.locals.order.dishes = dishes;
+
+
   res.json({ data: res.locals.order });
 }
 
@@ -85,4 +111,5 @@ module.exports = {
   list,
   create: [orderIsValid, create],
   read: [orderExists, read],
+  update: [orderExists, orderIsValid, updateValidation, update],
 };
