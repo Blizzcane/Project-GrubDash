@@ -11,21 +11,38 @@ const nextId = require("../utils/nextId");
 function bodyIsValid(req, res, next) {
   const { data: { name, description, price, image_url } = {} } = req.body;
 
-  if (
-    name &&
-    description &&
-    price &&
-    image_url &&
-    price > 0 &&
-    typeof price === "number"
-  ) {
-    return next();
+  if (!name || name === "") {
+    next({
+      status: 400,
+      message: "Dish must include a name",
+    });
   }
-  next({
-    status: 400,
-    message:
-      "A 'name', 'description', 'price', 'image_url' property is required.",
-  });
+  if (!description || description === "") {
+    next({
+      status: 400,
+      message: "Dish must include a description",
+    });
+  }
+  if (!price) {
+    next({
+      status: 400,
+      message: "Dish must include a price",
+    });
+  }
+  if (price <= 0 || typeof price !== "number") {
+    next({
+      status: 400,
+      message: "Dish must have a price that is an integer greater than 0",
+    });
+  }
+  if (!image_url || image_url === "") {
+    next({
+      status: 400,
+      message: "Dish must include a image_url",
+    });
+  }
+
+  next();
 }
 
 //GET /dishes
