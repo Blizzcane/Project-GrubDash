@@ -1,3 +1,4 @@
+const { RSA_NO_PADDING } = require("constants");
 const path = require("path");
 
 // Use the existing dishes data
@@ -74,7 +75,10 @@ function orderExists(req, res, next) {
     res.locals.order = foundOrder;
     next();
   }
-  res.status(404).json({ error: "not found!" });
+  next({
+    status: 404,
+    message: `Order id does not exist: ${orderId}`,
+  });
 }
 
 function updateValidation(req, res, next) {
@@ -103,8 +107,21 @@ function update(req, res) {
   res.locals.order.status = status;
   res.locals.order.dishes = dishes;
 
-
   res.json({ data: res.locals.order });
+}
+
+function destroy(req, res, next) {
+  if (res.locals.order.status !== "pending") {
+    next({
+      status: 400,
+      message: "An order cannot be deleted unless it is pending",
+    });
+  } else {
+    const index = orders.indexOf(res.locals.order);
+	orders.splice(index, 1);
+
+	res.sendStatus(204);
+  }
 }
 
 module.exports = {
@@ -112,4 +129,5 @@ module.exports = {
   create: [orderIsValid, create],
   read: [orderExists, read],
   update: [orderExists, orderIsValid, updateValidation, update],
+  delete: [orderExists, destroy],
 };
