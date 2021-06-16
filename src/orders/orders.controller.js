@@ -54,18 +54,18 @@ function orderIsValid(req, res, next) {
 }
 
 function create(req, res) {
-  const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+  const { data: { deliverTo, mobileNumber, dishes } = {} } = req.body;
 
   const newOrder = {
+    id: nextId(),
     deliverTo: deliverTo,
     mobileNumber: mobileNumber,
-    status: status,
     dishes: dishes,
   };
 
   orders.push(newOrder);
 
-  res.json({ data: newOrder });
+  res.status(201).json({ data: newOrder });
 }
 
 function orderExists(req, res, next) {
