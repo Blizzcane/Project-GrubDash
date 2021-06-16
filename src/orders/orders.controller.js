@@ -47,11 +47,10 @@ function orderIsValid(req, res, next) {
           status: 400,
           message: `Dish ${dish.id} must have a quantity that is an integer greater than 0`,
         });
-      } else {
-        next();
       }
     });
   }
+  next();
 }
 
 function create(req, res) {
@@ -63,6 +62,8 @@ function create(req, res) {
     status: status,
     dishes: dishes,
   };
+
+  orders.push(newOrder);
 
   res.json({ data: newOrder });
 }
@@ -84,13 +85,26 @@ function orderExists(req, res, next) {
 function updateValidation(req, res, next) {
   const { data: { id, status } = {} } = req.body;
   const { orderId } = req.params;
+  const statuses = ["pending", "preparing", "out-for-delivery", "delivered"];
 
   if (id && id !== orderId) {
     next({
       status: 400,
       message: `Order id does not match route id. Order: ${id}, Route: ${orderId}.`,
     });
+  } else if (!statuses.includes(status)) {
+    next({
+      status: 400,
+      message:
+        "Order must have a status of pending, preparing, out-for-delivery, delivered",
+    });
+  } else if (status === "delivered") {
+    next({
+      status: 400,
+      message: "A delivered order cannot be changed",
+    });
   }
+
   next();
 }
 
@@ -118,9 +132,9 @@ function destroy(req, res, next) {
     });
   } else {
     const index = orders.indexOf(res.locals.order);
-	orders.splice(index, 1);
+    orders.splice(index, 1);
 
-	res.sendStatus(204);
+    res.sendStatus(204);
   }
 }
 
