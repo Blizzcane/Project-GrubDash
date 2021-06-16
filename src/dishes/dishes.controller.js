@@ -10,7 +10,15 @@ const nextId = require("../utils/nextId");
 
 function bodyIsValid(req, res, next) {
   const { data: { name, description, price, image_url } = {} } = req.body;
-  if (name && description && price && image_url && price > 0) {
+
+  if (
+    name &&
+    description &&
+    price &&
+    image_url &&
+    price > 0 &&
+    typeof price === "number"
+  ) {
     return next();
   }
   next({
@@ -34,7 +42,7 @@ function dishExists(req, res, next) {
     next();
     return;
   }
-  
+
   res.status(404).json({ error: "not found!" });
 }
 
@@ -55,7 +63,19 @@ function create(req, res) {
   dishes.push(newDish);
   res.status(201).json({ data: newDish });
 }
- 
+
+function idCheck(req, res, next) {
+  const { data: { id } = {} } = req.body;
+  const { dishId } = req.params;
+
+  if (id && id !== dishId) {
+    next({
+      status: 400,
+      message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`,
+    });
+  }
+  next();
+}
 
 function update(req, res) {
   const { data: { id, name, description, image_url, price } = {} } = req.body;
@@ -73,5 +93,5 @@ module.exports = {
   list,
   read: [dishExists, read],
   create: [bodyIsValid, create],
-  update: [dishExists, bodyIsValid, update],
+  update: [dishExists, idCheck, bodyIsValid, update],
 };
